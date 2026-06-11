@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Checklist ASKI 2026 - Kec. Cibatu</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-emerald-700 to-teal-800 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 p-2 rounded-lg">
+                    <i data-lucide="archive" class="w-8 h-8 text-emerald-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight">ASKI 2026</h1>
+                    <p class="text-xs text-emerald-100">Kecamatan Cibatu — Unit Pengolah (UP) & Unit Kearsipan (UK)</p>
+                </div>
+            </div>
+            
+            <!-- Global Progress Tracker -->
+            <div class="flex items-center gap-4 bg-black/20 px-4 py-2 rounded-xl border border-white/10 w-full sm:w-auto">
+                <div class="text-right hidden md:block">
+                    <span class="text-xs text-emerald-200 block font-medium">Progres Global</span>
+                    <span id="global-stats-text" class="text-sm font-bold">0 / 141 Selesai</span>
+                </div>
+                <div class="w-32 bg-slate-700/50 rounded-full h-2.5 overflow-hidden border border-white/5">
+                    <div id="global-progress-bar" class="bg-emerald-400 h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <div class="bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-lg text-xs font-bold border border-emerald-400/20" id="global-percentage">
+                    0%
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- Sidebar: Meta & Config -->
+        <aside class="lg:col-span-1 flex flex-col gap-6">
+            <!-- Info Pengerjaan -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i data-lucide="clipboard-list" class="w-4 h-4"></i> Catatan Pengerjaan
+                </h2>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Dikerjakan Oleh</label>
+                    <input type="text" id="meta-worker" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Nama Petugas">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Tgl Mulai</label>
+                        <input type="date" id="meta-start" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Tgl Selesai/Target</label>
+                        <input type="date" id="meta-end" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Catatan / Kendala</label>
+                    <textarea id="meta-notes" rows="3" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Tulis kendala pengerjaan disini..."></textarea>
+                </div>
+                <button id="btn-save-meta" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i> Simpan Info Pengerjaan
+                </button>
+            </div>
+
+            <!-- GDrive Config (Sembunyi Input - Status Terhubung Otomatis) -->
+            <div class="bg-emerald-50 border border-emerald-100 p-5 rounded-2xl flex flex-col gap-4">
+                <h2 class="text-sm font-bold text-emerald-800 flex items-center gap-2">
+                    <i data-lucide="cloud-lightning" class="w-5 h-5 text-emerald-600"></i> Integrasi Google Drive
+                </h2>
+                
+                <!-- Indikator Koneksi Aktif -->
+                <div class="flex items-center gap-2.5 bg-emerald-100/60 px-3 py-2.5 rounded-xl border border-emerald-200">
+                    <div class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-800">Terhubung Otomatis</span>
+                </div>
+
+                <p class="text-[11px] text-emerald-700 leading-relaxed">
+                    Sistem integrasi Google Drive telah dikunci menggunakan Apps Script resmi Kecamatan Cibatu. Semua berkas akan otomatis terunggah ke folder kearsipan yang sesuai tanpa perlu setup manual.
+                </p>
+
+                <!-- Hidden Input untuk URL Google Apps Script yang Dikunci -->
+                <input type="hidden" id="gdrive-api" value="https://script.google.com/macros/s/AKfycbxqGJeiQF-1sP2Tm5pknzNpJnRjdAcYdTz139qiUFa_fTCzO_CH4VLachYhX7RhiZlOAw/exec">
+
+                <button id="btn-test-drive" class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                    <i data-lucide="activity" class="w-4 h-4"></i> Uji Konektivitas Drive
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <section class="lg:col-span-3 flex flex-col gap-6">
+            <!-- Mode Panduan Step-by-Step Banner -->
+            <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-5 text-white shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2.5 rounded-xl">
+                        <i data-lucide="compass" class="w-7 h-7 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-extrabold">Takut Ada Berkas yang Terlewat?</h2>
+                        <p class="text-xs text-orange-100">Gunakan Mode Panduan untuk mengisi folder secara terstruktur langkah-demi-langkah.</p>
+                    </div>
+                </div>
+                <button onclick="startWizard()" class="px-5 py-2.5 bg-white text-orange-700 hover:bg-orange-50 font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                    <i data-lucide="play-circle" class="w-4 h-4"></i> Mulai Mode Panduan
+                </button>
+            </div>
+
+            <!-- Tab Controls -->
+            <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex gap-2">
+                <button id="tab-up-trigger" class="flex-1 py-3 text-center rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-600 text-white" onclick="switchTab('UP')">
+                    <i data-lucide="folder-output" class="w-4 h-4"></i> BAGIAN 1 - UNIT PENGOLAH (UP)
+                </button>
+                <button id="tab-uk-trigger" class="flex-1 py-3 text-center rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center gap-2" onclick="switchTab('UK')">
+                    <i data-lucide="folder-sync" class="w-4 h-4"></i> BAGIAN 2 - UNIT KEARSIPAN (UK)
+                </button>
+            </div>
+
+            <!-- Tab Content Container -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <!-- Section Sub-Header / Search -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-slate-100 pb-5">
+                    <div>
+                        <h2 id="active-tab-title" class="text-lg font-extrabold text-slate-800">Unit Pengolah (UP)</h2>
+                        <p class="text-xs text-slate-400">Bukti pengelolaan arsip aktif di unit kerja Kecamatan</p>
+                    </div>
+                    <div class="relative w-full md:w-64">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="search-box" oninput="filterItems()" class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Cari nama folder/arsip...">
+                    </div>
+                </div>
+
+                <!-- Interactive Filters -->
+                <div id="category-filters" class="flex flex-wrap gap-1.5 mb-6">
+                    <!-- Dynamic categories injection -->
+                </div>
+
+                <!-- Checklist Cards Grid -->
+                <div id="checklist-grid" class="flex flex-col gap-4">
+                    <!-- Cards will be populated here dynamically -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Wizard (Step-by-Step Guide) Modal Overlay -->
+    <div id="modal-wizard" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transform scale-95 transition-all duration-300" id="wizard-container">
+            
+            <!-- Wizard Header -->
+            <div class="px-6 py-4 bg-gradient-to-r from-emerald-700 to-teal-800 text-white flex justify-between items-center rounded-t-3xl">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="compass" class="w-5 h-5 text-emerald-300"></i>
+                    <h3 class="font-extrabold text-sm tracking-wide uppercase">Panduan Berkas ASKI 2026</h3>
+                </div>
+                <button onclick="closeWizard()" class="text-white/80 hover:text-white bg-black/10 hover:bg-black/20 p-1.5 rounded-xl transition-all">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Wizard Step Progress -->
+            <div class="bg-slate-100 px-6 py-3 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span id="wizard-progress-text" class="text-xs font-bold text-slate-500">Langkah 1 dari 70</span>
+                <div class="flex items-center gap-2 w-full sm:w-1/2">
+                    <div class="flex-grow bg-slate-300 rounded-full h-2 overflow-hidden">
+                        <div id="wizard-progress-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <span id="wizard-progress-percent" class="text-[10px] font-extrabold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-lg">0%</span>
+                </div>
+            </div>
+
+            <!-- Wizard Body -->
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-grow flex flex-col gap-6">
+                <!-- Info Section -->
+                <div>
+                    <span id="wizard-section-badge" class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase mb-2 inline-block">1.1 PENCIPTAAN ARSIP</span>
+                    <h2 id="wizard-title" class="text-xl font-extrabold text-slate-800">Registrasi_Naskah_Keluar_2026</h2>
+                    <p id="wizard-desc" class="text-sm text-slate-500 mt-1 leading-relaxed">Screenshot menu registrasi naskah keluar di SRIKANDI (2026)</p>
+                </div>
+
+                <!-- Requirement Box -->
+                <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-2.5">
+                        <div class="bg-emerald-100 p-2 rounded-xl text-emerald-700">
+                            <i data-lucide="file-type" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 block font-medium">Format File</span>
+                            <span id="wizard-format" class="text-xs font-extrabold text-slate-700">JPEG</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <div class="bg-teal-100 p-2 rounded-xl text-teal-700">
+                            <i data-lucide="layers" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 block font-medium">Jumlah Diperlukan</span>
+                            <span id="wizard-count" class="text-xs font-extrabold text-slate-700">1 File</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dropzone / Actions -->
+                <div class="border-2 border-dashed border-slate-200 rounded-3xl p-6 hover:border-emerald-500 transition-all text-center flex flex-col items-center justify-center gap-3 bg-slate-50/50" id="wizard-dropzone">
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-slate-400">
+                        <i data-lucide="folder-open" class="w-8 h-8 text-emerald-600"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-700">Tarik berkas ke sini atau klik di bawah ini</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5" id="wizard-accepted-formats">Mendukung format gambar JPEG/PNG saja</p>
+                    </div>
+
+                    <!-- Hidden Inputs & Controls -->
+                    <div class="flex flex-wrap gap-2 justify-center mt-2">
+                        <!-- Input File -->
+                        <label class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                            <i data-lucide="upload-cloud" class="w-4 h-4"></i> Pilih Berkas
+                            <input type="file" id="wizard-file-input" class="hidden" onchange="handleWizardFileSelected(this)">
+                        </label>
+
+                        <!-- Input Kamera (Jika JPEG) -->
+                        <label id="wizard-camera-btn" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center">
+                            <i data-lucide="camera" class="w-4 h-4"></i>
+                            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleWizardFileSelected(this)">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Preview Area in Wizard -->
+                <div class="flex flex-col gap-2">
+                    <h4 class="text-xs font-extrabold text-slate-500 flex items-center gap-1">
+                        <i data-lucide="paperclip" class="w-3.5 h-3.5"></i> Berkas Terpilih Lokal
+                    </h4>
+                    <div id="wizard-preview-list" class="flex flex-wrap gap-2 min-h-[40px] bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                        <!-- Preview Items -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wizard Footer Controls -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 rounded-b-3xl">
+                <!-- Navigation Prev/Skip -->
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="wizardPrev()" class="flex-1 sm:flex-none px-4 py-2.5 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Sebelumnya
+                    </button>
+                    <button onclick="wizardNext()" class="flex-1 sm:flex-none px-4 py-2.5 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1">
+                        Lewati <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- Main Action (Save & Direct Next) -->
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <!-- Checkbox Tandai Selesai secara manual -->
+                    <button onclick="toggleWizardComplete()" id="wizard-manual-check-btn" class="flex-grow px-4 py-2.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+                        <!-- Icon check dynamic -->
+                    </button>
+
+                    <!-- Send Drive and Auto Next -->
+                    <button id="wizard-drive-btn" onclick="uploadWizardToDrive()" class="flex-grow px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5">
+                        <i data-lucide="cloud" class="w-4 h-4"></i> Kirim Drive & Lanjut
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script Utama Aplikasi -->
+    <script>
+        // DATA MODEL ASKI KECAMATAN CIBATU
+        const askiData = [
+            // BAGIAN 1 - UNIT PENGOLAH (UP)
+            { id: "UP-01", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Registrasi_Naskah_Keluar_2026", format: "JPEG", desc: "Screenshot menu registrasi naskah keluar di SRIKANDI (2026)", count: 1 },
+            { id: "UP-02", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Daftar_Naskah_Keluar_SRIKANDI", format: "JPEG", desc: "Screenshot daftar naskah keluar dari SRIKANDI (2026)", count: 1 },
+            { id: "UP-04", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Surat_Perintah_SRIKANDI", format: "PDF+TTE", desc: "3 surat perintah elektronik ber-TTE (2025-2026)", count: 3 },
+            { id: "UP-06", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Surat_Dinas_SRIKANDI", format: "PDF+TTE", desc: "3 surat dinas elektronik ber-TTE (2025-2026)", count: 3 },
+            { id: "UP-08", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Nota_Dinas_SRIKANDI", format: "PDF+TTE", desc: "3 nota dinas elektronik ber-TTE (2025-2026)", count: 3 },
+            { id: "UP-09", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Naskah_Dinas_Khas_Elektronik", format: "PDF+TTE", desc: "1 naskah dinas khas ber-TTE: SK/Berita Acara (2025-2026)", count: 1 },
+            { id: "UP-10", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Verifikasi_TTE", format: "JPEG", desc: "10 screenshot hasil verifikasi TTE (2026)", count: 10 },
+            { id: "UP-11", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Verifikasi_TTE_PANTER_KOMDIGI", format: "JPEG", desc: "10 screenshot verifikasi TTE via PANTER Komdigi (2026)", count: 10 },
+            { id: "UP-12", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Kotak_Keluar_TTE_Review", format: "JPEG", desc: "1 screenshot kotak keluar menu TTE Review di SRIKANDI (2026)", count: 1 },
+            { id: "UP-13", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Daftar_Tandatangan_Naskah_Dashboard", format: "JPEG", desc: "2 screenshot: daftar naskah ditandatangani + dashboard SRIKANDI (2026)", count: 2 },
+            { id: "UP-14", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Kotak_Masuk_Tindak_Lanjut", format: "JPEG", desc: "1 screenshot menu kotak masuk tindak lanjut di SRIKANDI (2026)", count: 1 },
+            { id: "UP-15", group: "UP", section: "1.1 PENCIPTAAN ARSIP — ELEKTRONIK (SRIKANDI)", folder: "Daftar_Naskah_Masuk_Dashboard", format: "JPEG", desc: "1 screenshot daftar naskah masuk + dashboard SRIKANDI (2026)", count: 1 },
+            
+            { id: "UP-16", group: "UP", section: "1.1 PENCIPTAAN ARSIP — KONVENSIONAL", folder: "Surat_Perintah_Konvensional", format: "PDF", desc: "3 surat perintah konvensional scan PDF (2025)", count: 3 },
+            { id: "UP-17", group: "UP", section: "1.1 PENCIPTAAN ARSIP — KONVENSIONAL", folder: "Surat_Dinas_Konvensional", format: "PDF", desc: "3 surat dinas konvensional scan PDF (2025)", count: 3 },
+            { id: "UP-18", group: "UP", section: "1.1 PENCIPTAAN ARSIP — KONVENSIONAL", folder: "Nota_Dinas_Konvensional", format: "PDF", desc: "3 nota dinas konvensional scan PDF (2025)", count: 3 },
+            { id: "UP-19", group: "UP", section: "1.1 PENCIPTAAN ARSIP — KONVENSIONAL", folder: "Naskah_Dinas_Khas_Konvensional", format: "PDF", desc: "1 naskah dinas khas konvensional scan PDF (2025)", count: 1 },
+            { id: "UP-20", group: "UP", section: "1.1 PENCIPTAAN ARSIP — KONVENSIONAL", folder: "Sarana_Pencatatan_Masuk", format: "JPEG+Excel", desc: "2 file: foto buku agenda masuk + Excel agenda masuk (2025)", count: 2 },
+            { id: "UP-21", group: "UP", section: "1.1 PENCIPTAAN ARSIP — KONVENSIONAL", folder: "Buku_Ekspedisi_Disposisi_Masuk", format: "JPEG", desc: "2 foto fisik buku ekspedisi/disposisi masuk (2025)", count: 2 },
+            { id: "UP-22", group: "UP", section: "1.1 PENCIPTAAN ARSIP — KONVENSIONAL", folder: "Sarana_Pencatatan_Keluar", format: "JPEG+Excel", desc: "2 file: foto buku agenda keluar + Excel agenda keluar (2025)", count: 2 },
+            { id: "UP-23", group: "UP", section: "1.1 PENCIPTAAN ARSIP — KONVENSIONAL", folder: "Naskah_Keluar_TU", format: "JPEG", desc: "2 foto fisik naskah keluar di Tata Usaha (2025)", count: 2 },
+            { id: "UP-24", group: "UP", section: "1.1 PENCIPTAAN ARSIP — KONVENSIONAL", folder: "Buku_Ekspedisi_Disposisi_Keluar", format: "JPEG", desc: "2 foto fisik buku ekspedisi/disposisi keluar (2025)", count: 2 },
+            { id: "UP-25", group: "UP", section: "1.1 PENCIPTAAN ARSIP — KONVENSIONAL", folder: "Penyimpanan_Filling_Cabinet", format: "JPEG", desc: "2 foto fisik penyimpanan di filling cabinet (2025)", count: 2 },
+            
+            { id: "UP-27", group: "UP", section: "1.2 PENGGUNAAN ARSIP", folder: "Sarana_Pencatatan_Layanan_Elektronik", format: "PDF", desc: "1 PDF sarana pencatatan layanan peminjaman/pengembalian elektronik (2025)", count: 1 },
+            { id: "UP-28", group: "UP", section: "1.2 PENGGUNAAN ARSIP", folder: "Daftar_Arsip_Aktif_Konvensional", format: "PDF", desc: "2 PDF daftar arsip aktif konvensional yang telah diberkaskan (2025)", count: 2 },
+            { id: "UP-29", group: "UP", section: "1.2 PENGGUNAAN ARSIP", folder: "Sarana_Pencatatan_Layanan_Konvensional", format: "PDF", desc: "1 PDF kartu kendali/buku peminjaman arsip konvensional (2025)", count: 1 },
+            { id: "UP-30", group: "UP", section: "1.2 PENGGUNAAN ARSIP", folder: "Out_Indicator_Out_Sheet_Out_Guide", format: "JPEG", desc: "2 foto out indicator, out sheet, dan out guide pada filing (2025)", count: 2 },
+            
+            { id: "UP-31", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — PEMBERKASAN", folder: "Menu_Pemberkasan_2025", format: "JPEG", desc: "Screenshot menu pemberkasan di SIDIK (2025)", count: 1 },
+            { id: "UP-32", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — PEMBERKASAN", folder: "Daftar_Sudah_Diberkaskan_2025", format: "JPEG", desc: "Screenshot daftar arsip sudah diberkaskan di SIDIK (2025)", count: 1 },
+            { id: "UP-33", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — PEMBERKASAN", folder: "Daftar_Belum_Diberkaskan_2025", format: "JPEG", desc: "Screenshot daftar arsip belum diberkaskan di SIDIK (2025)", count: 1 },
+            { id: "UP-34", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — PEMBERKASAN", folder: "Daftar_Arsip_Aktif_2025", format: "PDF", desc: "Daftar arsip aktif hasil pemberkasan (2025)", count: 1 },
+            { id: "UP-35", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — PEMBERKASAN", folder: "Nota_Dinas_Penyampaian_Daftar_Elektronik", format: "PDF", desc: "2 nota dinas penyampaian daftar arsip aktif elektronik ke UK (2024-2025)", count: 2 },
+            { id: "UP-36", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — PEMBERKASAN", folder: "Status_Berkas_Icon_Gembok", format: "JPEG", desc: "2 screenshot status berkas dengan ikon gembok di SIDIK (2019-2025)", count: 2 },
+            { id: "UP-37", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — PEMBERKASAN", folder: "Rencana_Pemberkasan_Konvensional", format: "PDF", desc: "1 PDF rencana pemberkasan arsip konvensional (2024-2025)", count: 1 },
+            { id: "UP-38", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — PEMBERKASAN", folder: "Daftar_Arsip_Aktif_Konvensional_Pemberkasan", format: "PDF", desc: "1 PDF daftar arsip aktif konvensional yang telah diberkaskan (2024-2025)", count: 1 },
+            { id: "UP-39", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — PEMBERKASAN", folder: "Foto_Penyimpanan_Arsip_Aktif", format: "JPEG", desc: "2 foto kondisi penyimpanan arsip aktif di filling cabinet/rak (2024-2025)", count: 2 },
+            { id: "UP-40", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — PEMBERKASAN", folder: "Nota_Dinas_Penyampaian_Daftar_Konvensional", format: "PDF", desc: "2 nota dinas penyampaian daftar arsip aktif konvensional ke UK (2024-2025)", count: 2 },
+            { id: "UP-41", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — PEMBERKASAN", folder: "Foto_Folder_Guide_Filling", format: "JPEG", desc: "2 foto fisik folder, guide, dan filling cabinet (2024-2025)", count: 2 },
+            
+            { id: "UP-42", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Surat_Perintah_Alih_Media", format: "PDF", desc: "1 surat perintah pelaksanaan alih media arsip (2025)", count: 1 },
+            { id: "UP-43", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Daftar_Arsip_yang_akan_Dialihmedia", format: "PDF", desc: "1 daftar arsip yang akan dialihmedia (2025)", count: 1 },
+            { id: "UP-44", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Penetapan_Arsip_yang_akan_Dialihmedia", format: "PDF", desc: "1 SK/penetapan arsip yang akan dialihmedia (2025)", count: 1 },
+            { id: "UP-45", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Foto_Fisik_Setelah_Alihmedia", format: "JPEG", desc: "2 foto kondisi fisik arsip setelah alih media (2025)", count: 2 },
+            { id: "UP-46", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "File_Autentikasi_Alih_Media", format: "PDF", desc: "5 PDF hasil alih media yang telah diautentikasi (2025)", count: 5 },
+            { id: "UP-47", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Berita_Acara_Alih_Media", format: "PDF", desc: "1 berita acara pelaksanaan alih media (2025)", count: 1 },
+            { id: "UP-48", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Daftar_Arsip_Hasil_Alih_Media", format: "PDF", desc: "1 daftar arsip hasil alih media yang telah selesai (2025)", count: 1 },
+            { id: "UP-49", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Surat_Pernyataan_Autentikasi", format: "PDF", desc: "1 surat pernyataan autentikasi dari pimpinan (2025)", count: 1 },
+            { id: "UP-50", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Screenshot_SIDIK_Arsip_Vital", format: "JPEG", desc: "2 screenshot menu arsip vital di SIDIK (2025)", count: 2 },
+            { id: "UP-51", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Foto_Video_Pelaksanaan_Alih_Media", format: "JPEG/MPEG", desc: "2 file: foto + video pelaksanaan alih media (2025)", count: 2 },
+            
+            { id: "UP-52", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ARSIP VITAL", folder: "Daftar_Arsip_Vital", format: "PDF", desc: "1 daftar arsip vital unit pengolah (2025)", count: 1 },
+            { id: "UP-53", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ARSIP VITAL", folder: "Foto_Penyimpanan_Arsip_Vital", format: "JPEG", desc: "2 foto penyimpanan arsip vital di brankas/lemari khusus (2025)", count: 2 },
+            
+            { id: "UP-54", group: "UP", section: "1.4 PENYUSUTAN ARSIP", folder: "Notulen_Penyeleksian_Inaktif", format: "PDF", desc: "4 notulen rapat penyeleksian arsip inaktif (2021-2025)", count: 4 },
+            { id: "UP-55", group: "UP", section: "1.4 PENYUSUTAN ARSIP", folder: "Foto_Arsip_Inaktif_Dipindahkan", format: "JPEG", desc: "8 foto arsip inaktif yang akan/sudah dipindahkan ke UK (2021-2025)", count: 8 },
+            { id: "UP-56", group: "UP", section: "1.4 PENYUSUTAN ARSIP", folder: "Berita_Acara_Pemindahan_Inaktif", format: "PDF", desc: "4 berita acara pemindahan arsip inaktif dari UP ke UK (2021-2025)", count: 4 },
+            { id: "UP-57", group: "UP", section: "1.4 PENYUSUTAN ARSIP", folder: "Daftar_Arsip_Inaktif_Dipindahkan", format: "PDF", desc: "4 daftar arsip inaktif yang dipindahkan (2021-2025)", count: 4 },
+            
+            { id: "UP-58", group: "UP", section: "2.1 SDM KEARSIPAN (UP)", folder: "Dokumen_Penunjukan_Arsiparis", format: "PDF", desc: "1 SK/dokumen penunjukan arsiparis di UP (2026)", count: 1 },
+            { id: "UP-59", group: "UP", section: "2.1 SDM KEARSIPAN (UP)", folder: "Daftar_Arsiparis", format: "PDF", desc: "1 daftar nama arsiparis aktif di UP (2026)", count: 1 },
+            { id: "UP-60", group: "UP", section: "2.1 SDM KEARSIPAN (UP)", folder: "Sertifikasi_Arsiparis", format: "PDF", desc: "File sertifikat kompetensi arsiparis (sesuai tahun terbit)", count: 1 },
+            { id: "UP-61", group: "UP", section: "2.1 SDM KEARSIPAN (UP)", folder: "Surat_Usulan_Sertifikasi", format: "PDF", desc: "1 surat usulan sertifikasi arsiparis ke ANRI/instansi (2024-2025)", count: 1 },
+            { id: "UP-62", group: "UP", section: "2.1 SDM KEARSIPAN (UP)", folder: "Dokumen_Penunjukan_Pengelola", format: "PDF", desc: "1 SK/dokumen penunjukan pengelola arsip non-arsiparis (2026)", count: 1 },
+            { id: "UP-63", group: "UP", section: "2.1 SDM KEARSIPAN (UP)", folder: "Daftar_Pengelola_Arsip", format: "PDF", desc: "1 daftar nama pengelola arsip di UP (2026)", count: 1 },
+            { id: "UP-64", group: "UP", section: "2.1 SDM KEARSIPAN (UP)", folder: "Usulan_Diklat_Teknis", format: "PDF", desc: "1 surat usulan mengikuti diklat teknis kearsipan (2026)", count: 1 },
+            { id: "UP-65", group: "UP", section: "2.1 SDM KEARSIPAN (UP)", folder: "Pemanggilan_Diklat", format: "PDF", desc: "1 surat pemanggilan diklat dari penyelenggara (2026)", count: 1 },
+            { id: "UP-66", group: "UP", section: "2.1 SDM KEARSIPAN (UP)", folder: "STTP_Diklat", format: "PDF", desc: "Sertifikat/STTP diklat kearsipan yang telah diikuti (sesuai tahun)", count: 1 },
+            
+            { id: "UP-67", group: "UP", section: "2.2 SARANA DAN PRASARANA (UP)", folder: "Foto_Filling_Cabinet", format: "JPEG", desc: "2 foto filling cabinet untuk penyimpanan arsip aktif (2025)", count: 2 },
+            { id: "UP-68", group: "UP", section: "2.2 SARANA DAN PRASARANA (UP)", folder: "Out_Indicator_Out_Sheet_Out_Guide_Sarpras", format: "JPEG", desc: "2 foto sarana out indicator, out sheet, dan out guide (2025)", count: 2 },
+            { id: "UP-69", group: "UP", section: "FORM_NILAI", folder: "Form_ASKI_UP_1_2026.xlsx", format: "XLSX", desc: "Form penilaian ASKI UP — isi setelah semua bukti lengkap", count: 1 },
+
+            // BAGIAN 2 - UNIT KEARSIPAN (UK)
+            { id: "UK-01", group: "UK", section: "1.1 PENGENDALIAN NASKAH DINAS (UK)", folder: "Foto_Buku_Agenda_Naskah_Masuk", format: "JPEG", desc: "2 foto buku agenda naskah masuk di UK (2025)", count: 2 },
+            { id: "UK-02", group: "UK", section: "1.1 PENGENDALIAN NASKAH DINAS (UK)", folder: "Agenda_Elektronik_Masuk_SIDEBAR", format: "JPEG", desc: "1 screenshot agenda masuk di SIDEBAR (2026)", count: 1 },
+            { id: "UK-03", group: "UK", section: "1.1 PENGENDALIAN NASKAH DINAS (UK)", folder: "Agenda_Elektronik_Masuk_SRIKANDI", format: "JPEG", desc: "1 screenshot agenda masuk di SRIKANDI (2026)", count: 1 },
+            { id: "UK-04", group: "UK", section: "1.1 PENGENDALIAN NASKAH DINAS (UK)", folder: "Naskah_Masuk_Diteruskan_SIDEBAR", format: "JPEG", desc: "1 screenshot naskah masuk yang sudah diteruskan di SIDEBAR (2026)", count: 1 },
+            { id: "UK-05", group: "UK", section: "1.1 PENGENDALIAN NASKAH DINAS (UK)", folder: "Log_Disposisi_SRIKANDI", format: "JPEG", desc: "1 screenshot log disposisi naskah di SRIKANDI (2026)", count: 1 },
+            { id: "UK-06", group: "UK", section: "1.1 PENGENDALIAN NASKAH DINAS (UK)", folder: "Foto_Buku_Ekspedisi", format: "JPEG", desc: "1 foto buku ekspedisi pengiriman surat (2025)", count: 1 },
+            { id: "UK-07", group: "UK", section: "1.1 PENGENDALIAN NASKAH DINAS (UK)", folder: "Foto_Buku_Agenda_Naskah_Keluar", format: "JPEG", desc: "2 foto buku agenda naskah keluar di UK (2025)", count: 2 },
+            { id: "UK-08", group: "UK", section: "1.1 PENGENDALIAN NASKAH DINAS (UK)", folder: "Agenda_Elektronik_Keluar_SIDEBAR", format: "JPEG", desc: "1 screenshot agenda keluar di SIDEBAR (2026)", count: 1 },
+            { id: "UK-09", group: "UK", section: "1.1 PENGENDALIAN NASKAH DINAS (UK)", folder: "Agenda_Elektronik_Keluar_SRIKANDI", format: "JPEG", desc: "1 screenshot agenda keluar di SRIKANDI (2026)", count: 1 },
+            { id: "UK-10", group: "UK", section: "1.1 PENGENDALIAN NASKAH DINAS (UK)", folder: "Registrasi_Telah_Distribusi_SIDEBAR", format: "JPEG", desc: "1 screenshot status registrasi telah distribusi di SIDEBAR (2026)", count: 1 },
+            { id: "UK-11", group: "UK", section: "1.1 PENGENDALIAN NASKAH DINAS (UK)", folder: "Daftar_Naskah_Keluar_Terkirim_SRIKANDI", format: "JPEG", desc: "1 screenshot daftar naskah keluar terkirim di SRIKANDI (2026)", count: 1 },
+            
+            { id: "UK-12", group: "UK", section: "1.2 PENGGUNAAN ARSIP (UK)", folder: "Daftar_Arsip_Inaktif_SKKAAD", format: "PDF", desc: "1 daftar arsip inaktif yang memiliki SKKAAD (2024-2025)", count: 1 },
+            { id: "UK-13", group: "UK", section: "1.2 PENGGUNAAN ARSIP (UK)", folder: "Sarana_Pencatatan_Layanan_Inaktif", format: "PDF", desc: "1 file sarana pencatatan layanan peminjaman arsip inaktif (2025)", count: 1 },
+            
+            { id: "UK-14", group: "UK", section: "1.3 PEMELIHARAAN ARSIP (UK)", folder: "Video_Penataan_Inaktif", format: "MP4", desc: "1 video penataan arsip inaktif di ruang penyimpanan UK (2025-2026)", count: 1 },
+            { id: "UK-15", group: "UK", section: "1.3 PEMELIHARAAN ARSIP (UK)", folder: "Foto_Penataan_Inaktif", format: "JPEG", desc: "1 foto kondisi penataan arsip inaktif di rak/boks (2025-2026)", count: 1 },
+            { id: "UK-16", group: "UK", section: "1.3 PEMELIHARAAN ARSIP (UK)", folder: "Daftar_Arsip_Inaktif_UK", format: "PDF", desc: "Daftar arsip inaktif yang diterima UK (rentang 2021-2025)", count: 1 },
+            { id: "UK-17", group: "UK", section: "1.3 PEMELIHARAAN ARSIP (UK)", folder: "Foto_Penyimpanan_Boks_Rak", format: "JPEG", desc: "2 foto penyimpanan arsip inaktif dalam boks di rak (2025)", count: 2 },
+            { id: "UK-18", group: "UK", section: "1.3 PEMELIHARAAN ARSIP (UK)", folder: "Foto_Inaktif_Dialihmedia", format: "JPEG", desc: "2 foto arsip inaktif yang sedang/sudah dialihmedia (2025)", count: 2 },
+            { id: "UK-19", group: "UK", section: "1.3 PEMELIHARAAN ARSIP (UK)", folder: "File_Alihmedia_Inaktif_Autentikasi", format: "PDF", desc: "5 PDF hasil alih media arsip inaktif yang diautentikasi (sesuai JRA)", count: 5 },
+            { id: "UK-20", group: "UK", section: "1.3 PEMELIHARAAN ARSIP (UK)", folder: "Berita_Acara_Alihmedia_Inaktif", format: "PDF", desc: "1 berita acara pelaksanaan alih media arsip inaktif (2024-2025)", count: 1 },
+            { id: "UK-21", group: "UK", section: "1.3 PEMELIHARAAN ARSIP (UK)", folder: "Daftar_Hasil_Alihmedia_Inaktif", format: "PDF", desc: "1 daftar arsip inaktif hasil alih media (2024-2025)", count: 1 },
+            
+            { id: "UK-22", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMINDAHAN DARI UP", folder: "BA_Pemindahan_Inaktif_dari_UP", format: "PDF", desc: "Berita acara pemindahan arsip inaktif dari UP ke UK (2021-2025)", count: 1 },
+            { id: "UK-23", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMINDAHAN DARI UP", folder: "Notulen_Identifikasi_Inaktif_10Tahun", format: "PDF", desc: "2 notulen jenis identifikasi arsip inaktif berumur 10 tahun (2021-2025)", count: 2 },
+            { id: "UK-24", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMINDAHAN DARI UP", folder: "BA_Pemindahan_10Tahun", format: "PDF", desc: "2 berita acara pemindahan arsip inaktif 10 tahun (2021-2025)", count: 2 },
+            { id: "UK-25", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMINDAHAN DARI UP", folder: "Daftar_Inaktif_Dipindahkan_10Tahun", format: "PDF", desc: "2 daftar arsip inaktif dipindahkan setelah 10 tahun (2021-2025)", count: 2 },
+            
+            { id: "UK-26", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMUSNAHAN", folder: "Pembentukan_Panitia_Penilai_Arsip", format: "PDF", desc: "2 SK pembentukan panitia penilai arsip untuk pemusnahan (2021-2025)", count: 2 },
+            { id: "UK-27", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMUSNAHAN", folder: "Laporan_Proceding_Seleksi_Musnah", format: "PDF", desc: "2 laporan proceeding seleksi/penilaian arsip yang akan dimusnahkan (2021-2025)", count: 2 },
+            { id: "UK-28", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMUSNAHAN", folder: "Daftar_Usul_Musnah", format: "PDF", desc: "2 daftar usul pemusnahan arsip (2021-2025)", count: 2 },
+            { id: "UK-29", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMUSNAHAN", folder: "Penilaian_Panitia_Penilai", format: "PDF", desc: "2 dokumen hasil penilaian panitia penilai arsip (2021-2025)", count: 2 },
+            { id: "UK-30", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMUSNAHAN", folder: "Surat_Pertimbangan_Musnah_OPD", format: "PDF", desc: "2 surat pertimbangan pemusnahan dari OPD/kepala daerah (2021-2025)", count: 2 },
+            { id: "UK-31", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMUSNAHAN", folder: "Persetujuan_Pemusnahan", format: "PDF", desc: "2 surat persetujuan pemusnahan arsip (2021-2025)", count: 2 },
+            { id: "UK-32", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMUSNAHAN", folder: "Penetapan_Arsip_Dimusnahkan", format: "PDF", desc: "2 SK penetapan arsip yang akan dimusnahkan (2021-2025)", count: 2 },
+            { id: "UK-33", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMUSNAHAN", folder: "BA_Pemusnahan_dan_Daftar", format: "PDF", desc: "2 berita acara pemusnahan arsip beserta daftarnya (2021-2025)", count: 2 },
+            { id: "UK-34", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMUSNAHAN", folder: "Daftar_Vital_Pemusnahan", format: "PDF", desc: "2 daftar arsip vital yang tidak termasuk dalam pemusnahan (2021-2025)", count: 2 },
+            { id: "UK-35", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PEMUSNAHAN", folder: "Laporan_Pemusnahan_ke_LKD", format: "PDF", desc: "2 laporan hasil pemusnahan ke Lembaga Kearsipan Daerah (2021-2025)", count: 2 },
+            
+            { id: "UK-36", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PENYERAHAN KE LKD", folder: "Pembentukan_Panitia_Penilai_Serah", format: "PDF", desc: "2 SK pembentukan panitia penilai penyerahan arsip statis (2021-2025)", count: 2 },
+            { id: "UK-37", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PENYERAHAN KE LKD", folder: "Laporan_Proceding_Seleksi_Serah", format: "PDF", desc: "2 laporan proceeding seleksi arsip yang akan diserahkan ke LKD (2021-2025)", count: 2 },
+            { id: "UK-38", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PENYERAHAN KE LKD", folder: "Laporan_Proceding_Penilaian_Serah", format: "PDF", desc: "2 laporan penilaian arsip untuk penyerahan (2021-2025)", count: 2 },
+            { id: "UK-39", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PENYERAHAN KE LKD", folder: "Surat_Pertimbangan_Serah_OPD", format: "PDF", desc: "2 surat pertimbangan penyerahan dari OPD (2021-2025)", count: 2 },
+            { id: "UK-40", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PENYERAHAN KE LKD", folder: "Surat_Persetujuan_Serah_ke_LKD", format: "PDF", desc: "2 surat persetujuan penyerahan arsip statis ke LKD (2021-2025)", count: 2 },
+            { id: "UK-41", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PENYERAHAN KE LKD", folder: "Verifikasi_dan_Persetujuan_LKD", format: "PDF", desc: "2 dokumen verifikasi dan persetujuan dari LKD (2021-2025)", count: 2 },
+            { id: "UK-42", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PENYERAHAN KE LKD", folder: "Penetapan_Arsip_Serah", format: "PDF", desc: "2 SK penetapan arsip yang akan diserahkan (2021-2025)", count: 2 },
+            { id: "UK-43", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PENYERAHAN KE LKD", folder: "BA_Serah_Terima_Statis", format: "PDF", desc: "2 berita acara serah terima arsip statis ke LKD (2021-2025)", count: 2 },
+            { id: "UK-44", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PENYERAHAN KE LKD", folder: "Daftar_Vital_Penyerahan", format: "PDF", desc: "2 daftar arsip vital yang diserahkan ke LKD (2021-2025)", count: 2 },
+            
+            { id: "UK-45", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Penunjuk_Arsiparis_UK", format: "PDF", desc: "1 SK penunjukan arsiparis di UK (2026)", count: 1 },
+            { id: "UK-46", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Daftar_Arsiparis_UK", format: "PDF", desc: "1 daftar arsiparis aktif di UK (2026)", count: 1 },
+            { id: "UK-47", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Sertifikasi_Arsiparis_UK", format: "PDF", desc: "File sertifikat kompetensi arsiparis UK (sesuai tahun)", count: 1 },
+            { id: "UK-48", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Usulan_Sertifikasi_Arsiparis", format: "PDF", desc: "1 surat usulan sertifikasi arsiparis UK (2024-2026)", count: 1 },
+            { id: "UK-49", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Naskah_Usulan_Sertifikasi", format: "PDF", desc: "1 naskah/berkas usulan sertifikasi (2025-2026)", count: 1 },
+            { id: "UK-50", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Surat_Tugas_Sertifikasi", format: "PDF", desc: "1 surat tugas mengikuti sertifikasi (2025-2026)", count: 1 },
+            { id: "UK-51", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Sertifikat_Hasil_Sertifikasi", format: "PDF", desc: "File sertifikat hasil sertifikasi arsiparis (sesuai tahun)", count: 1 },
+            { id: "UK-52", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Daftar_Arsiparis_Pengembangan", format: "PDF", desc: "1 daftar arsiparis yang mengikuti program pengembangan (2026)", count: 1 },
+            { id: "UK-53", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Usulan_Bimtek_Diklat", format: "PDF", desc: "1 surat usulan bimtek/diklat kearsipan (2025-2026)", count: 1 },
+            { id: "UK-54", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Sertifikat_Bimtek", format: "PDF", desc: "File sertifikat bimtek yang telah diikuti (2021-2025)", count: 1 },
+            { id: "UK-55", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "STTPL_Diklat", format: "PDF", desc: "File STTPL diklat kearsipan (sesuai tahun)", count: 1 },
+            { id: "UK-56", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Daftar_Pengelola_Arsip_UK", format: "PDF", desc: "1 daftar pengelola arsip non-arsiparis di UK (2026)", count: 1 },
+            { id: "UK-57", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Usulan_Diklat_Pengelola", format: "PDF", desc: "1 surat usulan diklat untuk pengelola arsip (2025-2026)", count: 1 },
+            { id: "UK-58", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Pemanggilan_Diklat_Pengelola", format: "PDF", desc: "1 surat pemanggilan diklat pengelola arsip (2021-2025)", count: 1 },
+            { id: "UK-59", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "STTP_Diklat_Pengelola", format: "PDF", desc: "File STTP diklat pengelola arsip (sesuai tahun)", count: 1 },
+            
+            { id: "UK-60", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Ruang_Inaktif_Pintu_Darurat", format: "JPEG", desc: "2 foto ruang inaktif yang memiliki pintu darurat (2025-2026)", count: 2 },
+            { id: "UK-61", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Ruang_Tidak_Basement", format: "JPEG", desc: "2 foto ruang inaktif yang tidak berada di basement (2025-2026)", count: 2 },
+            { id: "UK-62", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Ruang_Inaktif", format: "JPEG", desc: "2 foto kondisi umum ruang penyimpanan arsip inaktif (2025-2026)", count: 2 },
+            { id: "UK-63", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Akses_Masuk_Ruang", format: "JPEG", desc: "2 foto akses/pintu masuk ruang inaktif (2025-2026)", count: 2 },
+            { id: "UK-64", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Saluran_Drainase", format: "JPEG", desc: "2 foto saluran drainase di sekitar ruang inaktif (2025-2026)", count: 2 },
+            { id: "UK-65", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Video_Kondisi_Ruang_Inaktif", format: "MPEG", desc: "1 video kondisi keseluruhan ruang inaktif (2025-2026)", count: 1 },
+            { id: "UK-66", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Fire_Alarm", format: "JPEG", desc: "2 foto fire alarm di ruang inaktif (2025-2026)", count: 2 },
+            { id: "UK-67", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Heat_Smoke_Detector", format: "JPEG", desc: "2 foto heat/smoke detector di ruang inaktif (2025-2026)", count: 2 },
+            { id: "UK-68", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Hydrant_APAR", format: "JPEG", desc: "2 foto hidran dan APAR (Alat Pemadam Api Ringan) (2025-2026)", count: 2 },
+            { id: "UK-69", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Rak_Sesuai_Ketentuan", format: "JPEG", desc: "2 foto rak arsip yang memenuhi standar ketentuan (2025-2026)", count: 2 },
+            { id: "UK-70", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Container_Arsip", format: "JPEG", desc: "2 foto boks/container arsip inaktif (2025)", count: 2 },
+            { id: "UK-71", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Air_Conditioner", format: "JPEG", desc: "2 foto AC di ruang inaktif (2025-2026)", count: 2 },
+            { id: "UK-72", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Dehumidifier", format: "JPEG", desc: "2 foto dehumidifier di ruang inaktif (2025-2026)", count: 2 },
+            { id: "UK-73", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Thermohygrometer", format: "JPEG", desc: "2 foto thermohygrometer di ruang inaktif (2025-2026)", count: 2 },
+            { id: "UK-74", group: "UK", section: "2.2 SARANA DAN PRASARANA (UK)", folder: "Foto_Pengamanan_Akses", format: "JPEG", desc: "2 foto sistem pengamanan akses (CCTV, kunci, dll) (2025-2026)", count: 2 },
+            { id: "UK-75", group: "UK", section: "FORM_NILAI", folder: "Form_ASKI_UK_2026.xlsx", format: "XLSX", desc: "Form penilaian ASKI UK — isi setelah semua bukti lengkap", count: 1 }
+        ];
+
+        // State Manager
+        let currentTab = 'UP';
+        let activeCategory = 'SEMUA';
+        let userUploads = {}; // Menyimpan detail file terupload lokal
+        
+        // Wizard State
+        let wizardActive = false;
+        let wizardIndex = 0; // Index item aktif saat ini di wizard
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadState();
+            switchTab('UP');
+            initSettings();
+        });
+
+        // Toggle Modal
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.toggle('hidden');
+        }
+
+        // Switch Active Tab
+        function switchTab(tab) {
+            currentTab = tab;
+            activeCategory = 'SEMUA';
+            
+            // UI Button Active State
+            const upBtn = document.getElementById('tab-up-trigger');
+            const ukBtn = document.getElementById('tab-uk-trigger');
+            const title = document.getElementById('active-tab-title');
+            
+            if (tab === 'UP') {
+                upBtn.className = "flex-1 py-3 text-center rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-600 text-white shadow-md";
+                ukBtn.className = "flex-1 py-3 text-center rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-100 transition-all flex items-center justify-center gap-2";
+                title.innerText = "BAGIAN 1 - Unit Pengolah (UP)";
+            } else {
+                ukBtn.className = "flex-1 py-3 text-center rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-600 text-white shadow-md";
+                upBtn.className = "flex-1 py-3 text-center rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-100 transition-all flex items-center justify-center gap-2";
+                title.innerText = "BAGIAN 2 - Unit Kearsipan (UK)";
+            }
+
+            renderCategoryFilters();
+            renderChecklist();
+            updateProgressStats();
+        }
+
+        // Get Unique Categories for Filter Buttons
+        function getCategories() {
+            const items = askiData.filter(item => item.group === currentTab);
+            const sections = items.map(item => item.section);
+            return ['SEMUA', ...new Set(sections)];
+        }
+
+        // Render Filter Buttons
+        function renderCategoryFilters() {
+            const container = document.getElementById('category-filters');
+            container.innerHTML = '';
+            
+            const categories = getCategories();
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                const cleanName = cat.replace(/^\d+\.\d+\s+/, ""); // Sederhanakan penamaan di tombol filter
+                
+                btn.className = `px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    activeCategory === cat 
+                    ? 'bg-emerald-600 text-white shadow-sm' 
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`;
+                btn.innerText = cleanName;
+                btn.onclick = () => {
+                    activeCategory = cat;
+                    renderCategoryFilters();
+                    renderChecklist();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // Render Checklist Cards Grid
+        function renderChecklist() {
+            const grid = document.getElementById('checklist-grid');
+            grid.innerHTML = '';
+            
+            const searchVal = document.getElementById('search-box').value.toLowerCase();
+            
+            // Filter Items
+            const filteredItems = askiData.filter(item => {
+                const matchTab = item.group === currentTab;
+                const matchCat = activeCategory === 'SEMUA' || item.section === activeCategory;
+                const matchSearch = item.folder.toLowerCase().includes(searchVal) || item.desc.toLowerCase().includes(searchVal);
+                return matchTab && matchCat && matchSearch;
+            });
+
+            if (filteredItems.length === 0) {
+                grid.innerHTML = `
+                    <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <i data-lucide="info" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
+                        <p class="text-sm font-semibold text-slate-500">Tidak ada item checklist ditemukan</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            filteredItems.forEach(item => {
+                const isCompleted = userUploads[item.id] && userUploads[item.id].isCompleted;
+                const uploadedFiles = userUploads[item.id]?.files || [];
+                
+                const card = document.createElement('div');
+                card.id = `card-${item.id}`;
+                card.className = `p-5 rounded-2xl border transition-all flex flex-col md:flex-row gap-4 items-start md:items-center justify-between ${
+                    isCompleted 
+                    ? 'bg-emerald-50/50 border-emerald-200 shadow-sm' 
+                    : 'bg-white border-slate-100 hover:border-slate-200'
+                }`;
+
+                // Accepted formats & file configuration for HTML input
+                let acceptType = "*";
+                if(item.format.includes("JPEG")) acceptType = "image/jpeg,image/png";
+                else if(item.format.includes("PDF")) acceptType = ".pdf";
+                else if(item.format.includes("XLSX")) acceptType = ".xlsx, .xls";
+
+                card.innerHTML = `
+                    <div class="flex-grow max-w-2xl flex gap-3.5 items-start">
+                        <!-- Custom Checklist Mark Checkbox -->
+                        <div class="mt-1">
+                            <button onclick="toggleCompletedManually('${item.id}')" class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                isCompleted 
+                                ? 'bg-emerald-600 border-emerald-600 text-white' 
+                                : 'border-slate-300 hover:border-emerald-500 bg-white'
+                            }">
+                                ${isCompleted ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}
+                            </button>
+                        </div>
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                                <span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase">${item.id}</span>
+                                <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">${item.format}</span>
+                                <span class="text-[10px] text-slate-400 font-medium">${item.section}</span>
+                            </div>
+                            <h3 class="text-sm font-extrabold text-slate-800">${item.folder}</h3>
+                            <p class="text-xs text-slate-500 leading-relaxed mt-0.5">${item.desc}</p>
+                            
+                            <!-- Preview Files Area -->
+                            <div id="preview-${item.id}" class="flex flex-wrap gap-2 mt-3">
+                                ${renderPreviews(item.id)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Upload -->
+                    <div class="w-full md:w-auto flex flex-col items-stretch md:items-end gap-2 shrink-0">
+                        <div class="flex gap-2">
+                            <!-- Input File Biasa + Multi-file -->
+                            <label class="flex-1 md:flex-none px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all text-center cursor-pointer flex items-center justify-center gap-1.5">
+                                <i data-lucide="upload-cloud" class="w-4 h-4"></i> Pilih File (${item.count})
+                                <input type="file" id="input-${item.id}" accept="${acceptType}" ${item.count > 1 ? 'multiple' : ''} class="hidden" onchange="handleFileSelected(this, '${item.id}', ${item.count})">
+                            </label>
+
+                            <!-- Kamera untuk HP (Multi Shot Direct Capture) -->
+                            ${item.format.includes("JPEG") ? `
+                            <label class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all text-center cursor-pointer flex items-center justify-center">
+                                <i data-lucide="camera" class="w-4 h-4"></i>
+                                <input type="file" accept="image/*" capture="environment" ${item.count > 1 ? 'multiple' : ''} class="hidden" onchange="handleFileSelected(this, '${item.id}', ${item.count})">
+                            </label>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Kirim Ke Google Drive Action Button -->
+                        <button id="btn-drive-${item.id}" onclick="uploadToGoogleDrive('${item.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 ${uploadedFiles.length > 0 ? '' : 'opacity-40 pointer-events-none'}">
+                            <i data-lucide="cloud" class="w-4 h-4"></i> Upload ke Drive
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        // Render File Previews Inside Card
+        function renderPreviews(id) {
+            const data = userUploads[id];
+            if (!data || !data.files || data.files.length === 0) return '';
+            
+            return data.files.map((file, idx) => {
+                let badgeClass = file.gdriveUrl ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
+                let statusText = file.gdriveUrl ? 'Drive ✓' : 'Lokal';
+                return `
+                    <div class="relative flex items-center gap-1 bg-slate-100 pl-2 pr-1.5 py-1 rounded-lg text-[10px] font-semibold text-slate-600 border border-slate-200">
+                        <span class="truncate max-w-[120px]" title="${file.name}">${file.name}</span>
+                        <span class="${badgeClass} px-1.5 py-0.2 rounded-md font-bold text-[9px]">${statusText}</span>
+                        <button onclick="removeFile('${id}', ${idx})" class="text-rose-500 hover:text-rose-700 ml-1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Handle File Selection (Reads files as base64)
+        function handleFileSelected(input, id, requiredCount) {
+            const files = Array.from(input.files);
+            if (files.length === 0) return;
+
+            if (!userUploads[id]) {
+                userUploads[id] = { isCompleted: false, files: [] };
+            }
+
+            let loadedCount = 0;
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Data = e.target.result.split(',')[1];
+                    userUploads[id].files.push({
+                        name: file.name,
+                        mimeType: file.type || "application/octet-stream",
+                        base64Data: base64Data,
+                        gdriveUrl: null // Belum terkirim ke drive
+                    });
+                    
+                    loadedCount++;
+                    if (loadedCount === files.length) {
+                        // Jika jumlah file terkumpul sudah memenuhi syarat min, otomatis set checklist manual
+                        if (userUploads[id].files.length >= requiredCount) {
+                            userUploads[id].isCompleted = true;
+                        }
+                        saveState();
+                        renderChecklist();
+                        updateProgressStats();
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Remove Single File from Stack
+        function removeFile(id, idx) {
+            if (userUploads[id] && userUploads[id].files) {
+                userUploads[id].files.splice(idx, 1);
+                if(userUploads[id].files.length === 0) {
+                    userUploads[id].isCompleted = false;
+                }
+                saveState();
+                renderChecklist();
+                updateProgressStats();
+            }
+        }
+
+        // Toggle Checklist Manually (for flexibility)
+        function toggleCompletedManually(id) {
+            if (!userUploads[id]) {
+                userUploads[id] = { isCompleted: false, files: [] };
+            }
+            userUploads[id].isCompleted = !userUploads[id].isCompleted;
+            saveState();
+            renderChecklist();
+            updateProgressStats();
+        }
+
+        // Live Filter search
+        function filterItems() {
+            renderChecklist();
+        }
+
+        // Google Drive Upload Logic
+        async function uploadToGoogleDrive(id) {
+            const apiEndpoint = document.getElementById('gdrive-api').value.trim();
+            if (!apiEndpoint) {
+                alert("Sistem Google Drive Apps Script tidak terkonfigurasi!");
+                return;
+            }
+
+            const itemData = askiData.find(item => item.id === id);
+            const userItem = userUploads[id];
+            
+            if (!userItem || !userItem.files || userItem.files.length === 0) {
+                alert("Pilih file terlebih dahulu sebelum mengunggah ke Drive.");
+                return;
+            }
+
+            const btn = document.getElementById(`btn-drive-${id}`);
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<span class="animate-spin mr-1">⌛</span> Mengirim...`;
+            btn.classList.add('pointer-events-none', 'opacity-70');
+
+            try {
+                let successCount = 0;
+                for (let file of userItem.files) {
+                    if (file.gdriveUrl) {
+                        successCount++; // Lewati jika sudah pernah diupload ke drive
+                        continue;
+                    }
+
+                    const payload = {
+                        itemId: itemData.id,
+                        category: itemData.group,
+                        folderName: itemData.folder,
+                        fileName: file.name,
+                        mimeType: file.mimeType,
+                        base64Data: file.base64Data
+                    };
+
+                    const response = await fetch(apiEndpoint, {
+                        method: 'POST',
+                        mode: 'cors',
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    if (result.status === "success") {
+                        file.gdriveUrl = result.fileUrl;
+                        successCount++;
+                    } else {
+                        throw new Error(result.message || "Gagal mengupload.");
+                    }
+                }
+
+                if (successCount === userItem.files.length) {
+                    userItem.isCompleted = true;
+                    saveState();
+                    alert(`Semua file untuk '${itemData.folder}' berhasil diunggah ke Google Drive!`);
+                }
+            } catch (err) {
+                alert(`Gagal upload ke Drive: ${err.message}. Pastikan status koneksi internet Anda aktif.`);
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('pointer-events-none', 'opacity-70');
+                renderChecklist();
+                updateProgressStats();
+            }
+        }
+
+        // Test Connection to GDrive API
+        document.getElementById('btn-test-drive').addEventListener('click', async () => {
+            const apiEndpoint = document.getElementById('gdrive-api').value.trim();
+            
+            const btn = document.getElementById('btn-test-drive');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `Menguji...`;
+            
+            try {
+                const response = await fetch(apiEndpoint);
+                const data = await response.json();
+                if(data.status === "success") {
+                    alert("Koneksi Sukses! Jembatan Google Drive Aktif dan Siap Digunakan.");
+                } else {
+                    alert("Koneksi gagal.");
+                }
+            } catch(e) {
+                alert("Koneksi Gagal. Silakan periksa jaringan internet Anda atau pastikan Apps Script Google Anda sudah dideploy dengan benar.");
+            } finally {
+                btn.innerHTML = originalHTML;
+            }
+        });
+
+        // ==========================================
+        // WIZARD MODE (MODE PANDUAN STEP-BY-STEP)
+        // ==========================================
+        
+        // Start Wizard (Mulai panduan)
+        function startWizard() {
+            // Urutkan data berdasarkan Tab aktif saat ini agar sesuai alur kerja UP atau UK
+            wizardActive = true;
+            wizardIndex = 0;
+            
+            // Cari index pertama dari tab aktif saat ini
+            const activeItems = askiData.filter(item => item.group === currentTab);
+            if (activeItems.length === 0) return;
+            
+            document.getElementById('modal-wizard').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('wizard-container').classList.remove('scale-95');
+                document.getElementById('wizard-container').classList.add('scale-100');
+            }, 50);
+
+            renderWizardStep();
+        }
+
+        // Close Wizard
+        function closeWizard() {
+            document.getElementById('wizard-container').classList.remove('scale-100');
+            document.getElementById('wizard-container').classList.add('scale-95');
+            setTimeout(() => {
+                document.getElementById('modal-wizard').classList.add('hidden');
+                wizardActive = false;
+                renderChecklist(); // Sinkronkan kembali UI grid luar
+            }, 150);
+        }
+
+        // Render Current Wizard Step Content
+        function renderWizardStep() {
+            const activeItems = askiData.filter(item => item.group === currentTab);
+            if (wizardIndex < 0) wizardIndex = 0;
+            if (wizardIndex >= activeItems.length) {
+                // Semua selesai!
+                alert(`Selamat! Anda telah melewati semua panduan untuk ${currentTab === 'UP' ? 'Unit Pengolah' : 'Unit Kearsipan'}.`);
+                closeWizard();
+                return;
+            }
+
+            const item = activeItems[wizardIndex];
+            const isCompleted = userUploads[item.id] && userUploads[item.id].isCompleted;
+            const uploadedFiles = userUploads[item.id]?.files || [];
+
+            // Update Header Progress
+            document.getElementById('wizard-progress-text').innerText = `Item ${wizardIndex + 1} dari ${activeItems.length}`;
+            const percent = Math.round(((wizardIndex) / activeItems.length) * 100);
+            document.getElementById('wizard-progress-bar').style.width = `${percent}%`;
+            document.getElementById('wizard-progress-percent').innerText = `${percent}% Selesai`;
+
+            // Update Meta Content
+            document.getElementById('wizard-section-badge').innerText = item.section;
+            document.getElementById('wizard-title').innerText = `${item.id} | ${item.folder}`;
+            document.getElementById('wizard-desc').innerText = item.desc;
+            document.getElementById('wizard-format').innerText = item.format;
+            document.getElementById('wizard-count').innerText = `${item.count} File Berkas`;
+
+            // Setup Accepted Formats and triggers
+            let acceptType = "*";
+            let formatText = "Mendukung format file apa saja";
+            if(item.format.includes("JPEG")) {
+                acceptType = "image/jpeg,image/png";
+                formatText = "Mendukung format screenshot gambar JPEG/PNG";
+                document.getElementById('wizard-camera-btn').classList.remove('hidden');
+            } else {
+                if(item.format.includes("PDF")) {
+                    acceptType = ".pdf";
+                    formatText = "Mendukung dokumen format PDF";
+                } else if(item.format.includes("XLSX")) {
+                    acceptType = ".xlsx, .xls";
+                    formatText = "Mendukung dokumen spreadsheet Excel saja";
+                }
+                document.getElementById('wizard-camera-btn').classList.add('hidden');
+            }
+
+            // Assign inputs attributes
+            const fileInput = document.getElementById('wizard-file-input');
+            fileInput.accept = acceptType;
+            if(item.count > 1) {
+                fileInput.setAttribute('multiple', 'true');
+            } else {
+                fileInput.removeAttribute('multiple');
+            }
+
+            document.getElementById('wizard-accepted-formats').innerText = formatText;
+
+            // Render Preview Files
+            renderWizardPreviews(item.id);
+
+            // Update Control Buttons Status
+            const manualBtn = document.getElementById('wizard-manual-check-btn');
+            if (isCompleted) {
+                manualBtn.className = "flex-grow px-4 py-2.5 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm";
+                manualBtn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> Ditandai Selesai`;
+            } else {
+                manualBtn.className = "flex-grow px-4 py-2.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5";
+                manualBtn.innerHTML = `<i data-lucide="circle" class="w-4 h-4"></i> Tandai Selesai`;
+            }
+
+            // Setup Drive Button State
+            const driveBtn = document.getElementById('wizard-drive-btn');
+            if (uploadedFiles.length > 0) {
+                driveBtn.className = "flex-grow px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer";
+                driveBtn.removeAttribute('disabled');
+            } else {
+                driveBtn.className = "flex-grow px-5 py-2.5 bg-slate-200 text-slate-400 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60";
+                driveBtn.setAttribute('disabled', 'true');
+            }
+
+            lucide.createIcons();
+        }
+
+        // Render File Previews Inside Wizard
+        function renderWizardPreviews(id) {
+            const container = document.getElementById('wizard-preview-list');
+            container.innerHTML = '';
+            const data = userUploads[id];
+            
+            if (!data || !data.files || data.files.length === 0) {
+                container.innerHTML = `<p class="text-[10px] text-slate-400 italic">Belum ada file dipilih untuk item ini.</p>`;
+                return;
+            }
+
+            data.files.forEach((file, idx) => {
+                let badgeClass = file.gdriveUrl ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
+                let statusText = file.gdriveUrl ? 'Drive ✓' : 'Lokal';
+                
+                const element = document.createElement('div');
+                element.className = "relative flex items-center gap-1 bg-white pl-2 pr-1.5 py-1 rounded-lg text-[10px] font-semibold text-slate-600 border border-slate-200 shadow-sm";
+                element.innerHTML = `
+                    <span class="truncate max-w-[150px]" title="${file.name}">${file.name}</span>
+                    <span class="${badgeClass} px-1.5 py-0.2 rounded-md font-bold text-[9px]">${statusText}</span>
+                    <button onclick="removeWizardFile('${id}', ${idx})" class="text-rose-500 hover:text-rose-700 ml-1">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                `;
+                container.appendChild(element);
+            });
+            lucide.createIcons();
+        }
+
+        // Handle File Selected In Wizard
+        function handleWizardFileSelected(input) {
+            const activeItems = askiData.filter(item => item.group === currentTab);
+            const item = activeItems[wizardIndex];
+            
+            const files = Array.from(input.files);
+            if (files.length === 0) return;
+
+            if (!userUploads[item.id]) {
+                userUploads[item.id] = { isCompleted: false, files: [] };
+            }
+
+            let loadedCount = 0;
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Data = e.target.result.split(',')[1];
+                    userUploads[item.id].files.push({
+                        name: file.name,
+                        mimeType: file.type || "application/octet-stream",
+                        base64Data: base64Data,
+                        gdriveUrl: null
+                    });
+                    
+                    loadedCount++;
+                    if (loadedCount === files.length) {
+                        if (userUploads[item.id].files.length >= item.count) {
+                            userUploads[item.id].isCompleted = true;
+                        }
+                        saveState();
+                        renderWizardStep();
+                        updateProgressStats();
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Remove File Inside Wizard Stack
+        function removeWizardFile(id, idx) {
+            if (userUploads[id] && userUploads[id].files) {
+                userUploads[id].files.splice(idx, 1);
+                const activeItems = askiData.filter(item => item.group === currentTab);
+                const item = activeItems[wizardIndex];
+                if (userUploads[id].files.length < item.count) {
+                    userUploads[id].isCompleted = false;
+                }
+                saveState();
+                renderWizardStep();
+                updateProgressStats();
+            }
+        }
+
+        // Prev Wizard Step
+        function wizardPrev() {
+            if (wizardIndex > 0) {
+                wizardIndex--;
+                renderWizardStep();
+            }
+        }
+
+        // Next Wizard Step (Manual/Skip)
+        function wizardNext() {
+            const activeItems = askiData.filter(item => item.group === currentTab);
+            if (wizardIndex < activeItems.length - 1) {
+                wizardIndex++;
+                renderWizardStep();
+            } else {
+                alert(`Anda sudah mencapai langkah terakhir pada bagian ${currentTab === 'UP' ? 'Unit Pengolah' : 'Unit Kearsipan'}!`);
+                closeWizard();
+            }
+        }
+
+        // Toggle Complete Manual inside Wizard
+        function toggleWizardComplete() {
+            const activeItems = askiData.filter(item => item.group === currentTab);
+            const item = activeItems[wizardIndex];
+            
+            if (!userUploads[item.id]) {
+                userUploads[item.id] = { isCompleted: false, files: [] };
+            }
+            userUploads[item.id].isCompleted = !userUploads[item.id].isCompleted;
+            saveState();
+            renderWizardStep();
+            updateProgressStats();
+        }
+
+        // Upload Direct to Google Drive inside Wizard and auto transition to Next Step
+        async function uploadWizardToDrive() {
+            const apiEndpoint = document.getElementById('gdrive-api').value.trim();
+            if (!apiEndpoint) {
+                alert("Sistem Google Drive Apps Script tidak terkonfigurasi!");
+                return;
+            }
+
+            const activeItems = askiData.filter(item => item.group === currentTab);
+            const itemData = activeItems[wizardIndex];
+            const userItem = userUploads[itemData.id];
+
+            if (!userItem || !userItem.files || userItem.files.length === 0) {
+                alert("Harap pilih atau ambil file foto/screenshot terlebih dahulu.");
+                return;
+            }
+
+            const driveBtn = document.getElementById('wizard-drive-btn');
+            const originalHTML = driveBtn.innerHTML;
+            driveBtn.innerHTML = `<span class="animate-spin mr-1">⌛</span> Mengirim & Menyiapkan Langkah Berikutnya...`;
+            driveBtn.classList.add('pointer-events-none', 'opacity-70');
+
+            try {
+                let successCount = 0;
+                for (let file of userItem.files) {
+                    if (file.gdriveUrl) {
+                        successCount++;
+                        continue;
+                    }
+
+                    const payload = {
+                        itemId: itemData.id,
+                        category: itemData.group,
+                        folderName: itemData.folder,
+                        fileName: file.name,
+                        mimeType: file.mimeType,
+                        base64Data: file.base64Data
+                    };
+
+                    const response = await fetch(apiEndpoint, {
+                        method: 'POST',
+                        mode: 'cors',
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    if (result.status === "success") {
+                        file.gdriveUrl = result.fileUrl;
+                        successCount++;
+                    } else {
+                        throw new Error(result.message || "Gagal mengupload.");
+                    }
+                }
+
+                if (successCount === userItem.files.length) {
+                    userItem.isCompleted = true;
+                    saveState();
+                    updateProgressStats();
+                    
+                    // Notifikasi sukses interaktif & langsung berpindah secara otomatis
+                    alert(`Berkas '${itemData.folder}' sukses terkirim ke Google Drive! Klik OK untuk lanjut ke bagian berikutnya.`);
+                    wizardNext();
+                }
+            } catch (err) {
+                alert(`Gagal mengirim ke Google Drive: ${err.message}. Harap periksa konektivitas jaringan Anda.`);
+            } finally {
+                driveBtn.innerHTML = originalHTML;
+                driveBtn.classList.remove('pointer-events-none', 'opacity-70');
+            }
+        }
+
+        // ==========================================
+        // LOCAL STORAGE STATE & UTILITIES
+        // ==========================================
+
+        // Save State to localStorage
+        function saveState() {
+            localStorage.setItem('aski_uploads_cibatu', JSON.stringify(userUploads));
+            
+            // Save Meta data
+            const meta = {
+                worker: document.getElementById('meta-worker').value,
+                start: document.getElementById('meta-start').value,
+                end: document.getElementById('meta-end').value,
+                notes: document.getElementById('meta-notes').value
+            };
+            localStorage.setItem('aski_meta_cibatu', JSON.stringify(meta));
+        }
+
+        // Load State from localStorage
+        function loadState() {
+            const stored = localStorage.getItem('aski_uploads_cibatu');
+            if (stored) {
+                userUploads = JSON.parse(stored);
+            }
+            
+            const storedMeta = localStorage.getItem('aski_meta_cibatu');
+            if(storedMeta) {
+                const meta = JSON.parse(storedMeta);
+                document.getElementById('meta-worker').value = meta.worker || '';
+                document.getElementById('meta-start').value = meta.start || '';
+                document.getElementById('meta-end').value = meta.end || '';
+                document.getElementById('meta-notes').value = meta.notes || '';
+            }
+        }
+
+        // Initialize Settings (GDrive URL Save Bypass)
+        function initSettings() {
+            // Kita mengabaikan penyimpanan eksternal karena URL sekarang dipasang paten/hardcoded di DOM element gdrive-api
+            document.getElementById('btn-save-meta').addEventListener('click', () => {
+                saveState();
+                alert("Info pengerjaan & catatan berhasil disimpan secara lokal!");
+            });
+        }
+
+        // Update Statistics on Top Header
+        function updateProgressStats() {
+            const totalItems = askiData.length;
+            let completedCount = 0;
+            
+            askiData.forEach(item => {
+                if (userUploads[item.id] && userUploads[item.id].isCompleted) {
+                    completedCount++;
+                }
+            });
+
+            const percent = Math.round((completedCount / totalItems) * 100);
+            
+            document.getElementById('global-stats-text').innerText = `${completedCount} / ${totalItems} Selesai`;
+            document.getElementById('global-progress-bar').style.width = `${percent}%`;
+            document.getElementById('global-percentage').innerText = `${percent}%`;
+        }
+    </script>
+</body>
+</html>
