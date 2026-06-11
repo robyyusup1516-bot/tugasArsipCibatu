@@ -80,15 +80,15 @@
                     <span id="supabase-status-text" class="font-bold">Offline (Browser Lokal)</span>
                 </div>
 
-                <!-- Supabase Config Inputs -->
-                <div class="flex flex-col gap-2">
+                <!-- Supabase Config Inputs - HIDDEN (SINKRONISASI OTOMATIS) -->
+                <div class="hidden">
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-500 mb-1">Supabase Project URL</label>
-                        <input type="text" id="supabase-url" class="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="https://xxx.supabase.co">
+                        <input type="text" id="supabase-url" class="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="https://xxx.supabase.co" value="https://rqfxikyrgvekgvlwdjtd.supabase.co">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-500 mb-1">Supabase Anon Key</label>
-                        <input type="password" id="supabase-key" class="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="eyJhbGciOiJIUzI1NiI...">
+                        <input type="password" id="supabase-key" class="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="eyJhbGciOiJIUzI1NiI..." value="sb_publishable_EGwb5QGGmSlXq73Q-1iTbQ_4nQDVbls">
                     </div>
                     <div class="grid grid-cols-2 gap-1.5">
                         <button onclick="connectSupabase()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-1">
@@ -543,7 +543,7 @@
             { id: "UK-44", group: "UK", section: "1.4 PENYUSUTAN ARSIP — PENYERAHAN KE LKD", folder: "Daftar_Vital_Penyerahan", format: "PDF", desc: "2 daftar arsip vital yang diserahkan ke LKD (2021-2025)", count: 2 },
             
             { id: "UK-45", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Penunjuk_Arsiparis_UK", format: "PDF", desc: "1 SK penunjukan arsiparis di UK (2026)", count: 1 },
-            { id: "UK-46", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Daftar_Arsiparis_UK", format: "PDF", desc: "1 daftar arsiparis aktif di UK (2026)", count: 1 },
+            { id: "UK-46", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Daftar_Arsiparis_UK", format: "PDF", desc: "1 daftararisiparis aktif di UK (2026)", count: 1 },
             { id: "UK-47", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Sertifikasi_Arsiparis_UK", format: "PDF", desc: "File sertifikat kompetensi arsiparis UK (sesuai tahun)", count: 1 },
             { id: "UK-48", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Usulan_Sertifikasi_Arsiparis", format: "PDF", desc: "1 surat usulan sertifikasi arsiparis UK (2024-2026)", count: 1 },
             { id: "UK-49", group: "UK", section: "2.1 SDM KEARSIPAN (UK)", folder: "Naskah_Usulan_Sertifikasi", format: "PDF", desc: "1 naskah/berkas usulan sertifikasi (2025-2026)", count: 1 },
@@ -596,14 +596,8 @@
             switchTab('UP');
             initSettings();
             
-            // Auto connect if credentials exist
-            const url = localStorage.getItem('aski_supabase_url');
-            const key = localStorage.getItem('aski_supabase_key');
-            if (url && key) {
-                document.getElementById('supabase-url').value = url;
-                document.getElementById('supabase-key').value = key;
-                connectSupabase(true); // silent connect on load
-            }
+            // Auto connect dengan detail akun Supabase yang telah dikunci
+            connectSupabase(true);
         });
 
         // Toggle Modal
