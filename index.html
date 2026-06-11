@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS Client library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&display=swap');
         body {
@@ -60,8 +62,45 @@
     <!-- Main Container -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
         
-        <!-- Sidebar: Meta & Config -->
+        <!-- Sidebar: Meta & Config & Supabase -->
         <aside class="lg:col-span-1 flex flex-col gap-6">
+            
+            <!-- Supabase Database Cloud Sync Panel -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i data-lucide="database" class="w-4 h-4 text-emerald-600"></i> Database Supabase Cloud
+                </h2>
+                <p class="text-[11px] text-slate-500 leading-relaxed">
+                    Sinkronisasikan data Anda agar aman di database server online secara permanen tanpa takut hilang saat ganti perangkat.
+                </p>
+
+                <!-- Status Cloud Sync -->
+                <div id="supabase-status" class="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-600">
+                    <div class="h-2 w-2 rounded-full bg-slate-400" id="supabase-indicator"></div>
+                    <span id="supabase-status-text" class="font-bold">Offline (Browser Lokal)</span>
+                </div>
+
+                <!-- Supabase Config Inputs -->
+                <div class="flex flex-col gap-2">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-1">Supabase Project URL</label>
+                        <input type="text" id="supabase-url" class="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="https://xxx.supabase.co">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-1">Supabase Anon Key</label>
+                        <input type="password" id="supabase-key" class="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="eyJhbGciOiJIUzI1NiI...">
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <button onclick="connectSupabase()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-1">
+                            <i data-lucide="log-in" class="w-3.5 h-3.5"></i> Hubungkan
+                        </button>
+                        <button onclick="toggleModal('modal-supabase-guide')" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1">
+                            <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> Cara Setup
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Info Pengerjaan -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
                 <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
@@ -90,13 +129,12 @@
                 </button>
             </div>
 
-            <!-- GDrive Config (Sembunyi Input - Status Terhubung Otomatis) -->
+            <!-- GDrive Config (Status Terhubung Otomatis) -->
             <div class="bg-emerald-50 border border-emerald-100 p-5 rounded-2xl flex flex-col gap-4">
                 <h2 class="text-sm font-bold text-emerald-800 flex items-center gap-2">
                     <i data-lucide="cloud-lightning" class="w-5 h-5 text-emerald-600"></i> Integrasi Google Drive
                 </h2>
                 
-                <!-- Indikator Koneksi Aktif -->
                 <div class="flex items-center gap-2.5 bg-emerald-100/60 px-3 py-2.5 rounded-xl border border-emerald-200">
                     <div class="relative flex h-3 w-3">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -106,7 +144,7 @@
                 </div>
 
                 <p class="text-[11px] text-emerald-700 leading-relaxed">
-                    Sistem integrasi Google Drive telah dikunci menggunakan Apps Script resmi Kecamatan Cibatu. Semua berkas akan otomatis terunggah ke folder kearsipan yang sesuai tanpa perlu setup manual.
+                    Semua file kearsipan fisik Anda akan terunggah langsung secara rapi di dalam Google Drive Anda yang terpusat.
                 </p>
 
                 <!-- Hidden Input untuk URL Google Apps Script yang Dikunci -->
@@ -298,6 +336,82 @@
         </div>
     </div>
 
+    <!-- Guide Modal Setup Supabase -->
+    <div id="modal-supabase-guide" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl max-h-[85vh] flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="settings" class="text-emerald-600"></i> Setup Database Supabase Gratis Anda
+                </h3>
+                <button onclick="toggleModal('modal-supabase-guide')" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-grow text-xs leading-relaxed text-slate-600 flex flex-col gap-4">
+                <p class="font-semibold text-slate-700">Ikuti panduan berikut agar data checklist tidak akan hilang saat di-refresh:</p>
+                
+                <ol class="list-decimal pl-4 flex flex-col gap-3">
+                    <li>Buka <b><a href="https://supabase.com" target="_blank" class="text-emerald-600 hover:underline font-bold">Supabase Dashboard</a></b>, daftar/login menggunakan akun Google Anda.</li>
+                    <li>Buat proyek baru (**New Project**) gratis, beri nama: `kearsipan-cibatu` dan masukkan password database Anda.</li>
+                    <li>Setelah proyek selesai dibuat (proses pembuatan sekitar 1-2 menit), buka menu **Table Editor** (ikon tabel di menu samping kiri).</li>
+                    <li>Klik **Create a new table** (Buat tabel baru) dengan pengaturan sebagai berikut:
+                        <ul class="list-disc pl-4 mt-1">
+                            <li>Name (Nama Tabel): <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-600 font-bold">aski_cibatu_progress</code></li>
+                            <li>Hilangkan centang pada opsi **"Enable Row Level Security (RLS)"** (nonaktifkan ini agar web static di GitHub bisa membaca & menulis data dengan mudah untuk kebutuhan internal).</li>
+                        </ul>
+                    </li>
+                    <li>Tambahkan kolom-kolom baru berikut ini pada tabel tersebut:
+                        <table class="w-full text-left mt-2 border-collapse border border-slate-200">
+                            <thead>
+                                <tr class="bg-slate-100">
+                                    <th class="p-1 border border-slate-200">Name (Nama Kolom)</th>
+                                    <th class="p-1 border border-slate-200">Type (Tipe Data)</th>
+                                    <th class="p-1 border border-slate-200">Default/Settings</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="p-1 border border-slate-200"><code class="bg-slate-100 font-mono text-[10px]">item_id</code></td>
+                                    <td class="p-1 border border-slate-200">text (jadikan Primary Key)</td>
+                                    <td class="p-1 border border-slate-200">Uncheck Is Identity</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-1 border border-slate-200"><code class="bg-slate-100 font-mono text-[10px]">is_completed</code></td>
+                                    <td class="p-1 border border-slate-200">boolean</td>
+                                    <td class="p-1 border border-slate-200">false</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-1 border border-slate-200"><code class="bg-slate-100 font-mono text-[10px]">files</code></td>
+                                    <td class="p-1 border border-slate-200">jsonb</td>
+                                    <td class="p-1 border border-slate-200">[] (Array Kosong)</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-1 border border-slate-200"><code class="bg-slate-100 font-mono text-[10px]">updated_at</code></td>
+                                    <td class="p-1 border border-slate-200">timestamptz</td>
+                                    <td class="p-1 border border-slate-200">now()</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </li>
+                    <li>Serta buat satu tabel tambahan bernama <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-600 font-bold">aski_cibatu_meta</code> untuk menyimpan data teks catatan pengerjaan:
+                        <ul class="list-disc pl-4 mt-1">
+                            <li>Kolom 1: <code class="bg-slate-100 font-mono text-[10px]">id</code> (text, Primary Key) - beri value default <code class="bg-slate-100 font-mono text-[10px]">"main"</code></li>
+                            <li>Kolom 2: <code class="bg-slate-100 font-mono text-[10px]">worker</code> (text)</li>
+                            <li>Kolom 3: <code class="bg-slate-100 font-mono text-[10px]">start_date</code> (text)</li>
+                            <li>Kolom 4: <code class="bg-slate-100 font-mono text-[10px]">end_date</code> (text)</li>
+                            <li>Kolom 5: <code class="bg-slate-100 font-mono text-[10px]">notes</code> (text)</li>
+                        </ul>
+                    </li>
+                    <li>Ambil **Project URL** dan **Anon Key** Anda dari menu **Project Settings** -> **API** di dashboard Supabase.</li>
+                    <li>Tempelkan kedua kunci tersebut ke kolom input di sidebar sebelah kiri aplikasi, lalu klik **Hubungkan**.</li>
+                </ol>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-100 flex justify-end bg-slate-50 rounded-b-2xl">
+                <button onclick="toggleModal('modal-supabase-guide')" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all">Paham, Selesai</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Script Utama Aplikasi -->
     <script>
         // DATA MODEL ASKI KECAMATAN CIBATU
@@ -351,7 +465,7 @@
             { id: "UP-46", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "File_Autentikasi_Alih_Media", format: "PDF", desc: "5 PDF hasil alih media yang telah diautentikasi (2025)", count: 5 },
             { id: "UP-47", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Berita_Acara_Alih_Media", format: "PDF", desc: "1 berita acara pelaksanaan alih media (2025)", count: 1 },
             { id: "UP-48", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Daftar_Arsip_Hasil_Alih_Media", format: "PDF", desc: "1 daftar arsip hasil alih media yang telah selesai (2025)", count: 1 },
-            { id: "UP-49", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Surat_Pernyataan_Autentikasi", format: "PDF", desc: "1 surat pernyataan autentikasi dari pimpinan (2025)", count: 1 },
+            { id: "UP-49", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", format: "PDF", folder: "Surat_Pernyataan_Autentikasi", desc: "1 surat pernyataan autentikasi dari pimpinan (2025)", count: 1 },
             { id: "UP-50", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Screenshot_SIDIK_Arsip_Vital", format: "JPEG", desc: "2 screenshot menu arsip vital di SIDIK (2025)", count: 2 },
             { id: "UP-51", group: "UP", section: "1.3 PEMELIHARAAN ARSIP — ALIH MEDIA", folder: "Foto_Video_Pelaksanaan_Alih_Media", format: "JPEG/MPEG", desc: "2 file: foto + video pelaksanaan alih media (2025)", count: 2 },
             
@@ -467,6 +581,10 @@
         let activeCategory = 'SEMUA';
         let userUploads = {}; // Menyimpan detail file terupload lokal
         
+        // Supabase Client State
+        let supabaseClient = null;
+        let isSupabaseConnected = false;
+
         // Wizard State
         let wizardActive = false;
         let wizardIndex = 0; // Index item aktif saat ini di wizard
@@ -477,12 +595,96 @@
             loadState();
             switchTab('UP');
             initSettings();
+            
+            // Auto connect if credentials exist
+            const url = localStorage.getItem('aski_supabase_url');
+            const key = localStorage.getItem('aski_supabase_key');
+            if (url && key) {
+                document.getElementById('supabase-url').value = url;
+                document.getElementById('supabase-key').value = key;
+                connectSupabase(true); // silent connect on load
+            }
         });
 
         // Toggle Modal
         function toggleModal(id) {
             const modal = document.getElementById(id);
             modal.classList.toggle('hidden');
+        }
+
+        // Connect Supabase Database
+        async function connectSupabase(silent = false) {
+            const url = document.getElementById('supabase-url').value.trim();
+            const key = document.getElementById('supabase-key').value.trim();
+
+            if (!url || !key) {
+                if(!silent) alert("Harap isi URL dan Anon Key Supabase terlebih dahulu!");
+                return;
+            }
+
+            try {
+                // Initialize supabase client SDK
+                supabaseClient = supabase.createClient(url, key);
+                
+                // Test connection by fetching data
+                const { data, error } = await supabaseClient
+                    .from('aski_cibatu_progress')
+                    .select('item_id, is_completed, files');
+
+                if (error) throw error;
+
+                isSupabaseConnected = true;
+                
+                // Save credentials
+                localStorage.setItem('aski_supabase_url', url);
+                localStorage.setItem('aski_supabase_key', key);
+
+                // Update UI status
+                const indicator = document.getElementById('supabase-indicator');
+                const statusText = document.getElementById('supabase-status-text');
+                const statusBox = document.getElementById('supabase-status');
+
+                indicator.className = "h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse";
+                statusText.innerText = "Terhubung ke Database Cloud ✓";
+                statusBox.className = "flex items-center gap-2 bg-emerald-100/70 px-3 py-2 rounded-xl border border-emerald-200 text-xs text-emerald-800";
+
+                // Merge / Import cloud data to local state
+                if (data && data.length > 0) {
+                    data.forEach(row => {
+                        userUploads[row.item_id] = {
+                            isCompleted: row.is_completed,
+                            files: row.files || []
+                        };
+                    });
+                    saveStateLocalOnly(); // update local cache
+                }
+
+                // Fetch metadata
+                const { data: metaData, error: metaError } = await supabaseClient
+                    .from('aski_cibatu_meta')
+                    .select('*')
+                    .eq('id', 'main')
+                    .single();
+
+                if (!metaError && metaData) {
+                    document.getElementById('meta-worker').value = metaData.worker || '';
+                    document.getElementById('meta-start').value = metaData.start_date || '';
+                    document.getElementById('meta-end').value = metaData.end_date || '';
+                    document.getElementById('meta-notes').value = metaData.notes || '';
+                    saveStateLocalOnly();
+                }
+
+                renderChecklist();
+                updateProgressStats();
+                if(!silent) alert("Koneksi Database Cloud Supabase Berhasil! Data Anda sekarang tersinkronisasi secara otomatis.");
+
+            } catch (err) {
+                console.error("Supabase Error:", err);
+                isSupabaseConnected = false;
+                if(!silent) {
+                    alert(`Gagal menghubungkan ke Supabase: ${err.message}.\n\nPastikan Anda sudah membuat tabel 'aski_cibatu_progress' dan menonaktifkan RLS seperti panduan.`);
+                }
+            }
         }
 
         // Switch Active Tab
@@ -1124,11 +1326,56 @@
         }
 
         // ==========================================
-        // LOCAL STORAGE STATE & UTILITIES
+        // DATABASE STATE SYNCING (SUPABASE) & LOCALSTORAGE
         // ==========================================
 
-        // Save State to localStorage
-        function saveState() {
+        // Save State (Local + Cloud Supabase Sync)
+        async function saveState() {
+            // 1. Save local cache
+            saveStateLocalOnly();
+
+            // 2. If connected to Supabase, push updates online
+            if (isSupabaseConnected && supabaseClient) {
+                try {
+                    // Update metadata
+                    const metaPayload = {
+                        id: 'main',
+                        worker: document.getElementById('meta-worker').value,
+                        start_date: document.getElementById('meta-start').value,
+                        end_date: document.getElementById('meta-end').value,
+                        notes: document.getElementById('meta-notes').value
+                    };
+
+                    await supabaseClient
+                        .from('aski_cibatu_meta')
+                        .upsert(metaPayload);
+
+                    // Sync all checklist progress
+                    // Kita kumpulkan payload upsert massal
+                    const upsertPayload = askiData.map(item => {
+                        const localData = userUploads[item.id] || { isCompleted: false, files: [] };
+                        return {
+                            item_id: item.id,
+                            is_completed: localData.isCompleted,
+                            files: localData.files,
+                            updated_at: new Date()
+                        };
+                    });
+
+                    const { error } = await supabaseClient
+                        .from('aski_cibatu_progress')
+                        .upsert(upsertPayload);
+
+                    if (error) throw error;
+
+                } catch (err) {
+                    console.error("Gagal menyinkronkan data ke Cloud:", err);
+                }
+            }
+        }
+
+        // Save local storage only (Helper)
+        function saveStateLocalOnly() {
             localStorage.setItem('aski_uploads_cibatu', JSON.stringify(userUploads));
             
             // Save Meta data
@@ -1160,11 +1407,16 @@
 
         // Initialize Settings (GDrive URL Save Bypass)
         function initSettings() {
-            // Kita mengabaikan penyimpanan eksternal karena URL sekarang dipasang paten/hardcoded di DOM element gdrive-api
-            document.getElementById('btn-save-meta').addEventListener('click', () => {
-                saveState();
-                alert("Info pengerjaan & catatan berhasil disimpan secara lokal!");
+            document.getElementById('btn-save-meta').addEventListener('click', async () => {
+                await saveState();
+                alert("Info pengerjaan & catatan berhasil disimpan dan disinkronisasikan secara aman!");
             });
+            
+            // Bind inputs to save state on change
+            document.getElementById('meta-worker').addEventListener('change', () => saveState());
+            document.getElementById('meta-start').addEventListener('change', () => saveState());
+            document.getElementById('meta-end').addEventListener('change', () => saveState());
+            document.getElementById('meta-notes').addEventListener('change', () => saveState());
         }
 
         // Update Statistics on Top Header
